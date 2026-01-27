@@ -1,0 +1,6 @@
+﻿services:
+  nomiki.api:
+    image: nomiki.api
+    build:
+      context: .
+      dockerfile: Nomiki.Api/Dockerfile
