@@ -2,6 +2,7 @@ using Nomiki.Api.InterestRate;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// TODO: Open API DateOnly, EnumString
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

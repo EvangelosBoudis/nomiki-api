@@ -61,11 +61,11 @@ public class InterestRateService : IInterestRateService
             });
     }
 
+    // TODO: Simplify code using .RoundAmount() etc.
     public async Task<InterestCalculationResult> CalculateInterestAsync(InterestCalculationCommand command)
     {
         var rates = await GetInterestRatesAsync();
-
-        var periods = new List<InterestPeriodDto>();
+        var tempPeriods = new List<InterestPeriodDto>();
 
         // Φιλτράρισμα και εύρεση περιόδων επιτοκίων
         var relevantRates = rates
@@ -88,39 +88,93 @@ public class InterestRateService : IInterestRateService
                 var subStart = start > yearStart ? start : yearStart;
                 var subEnd = end < yearEnd ? end : yearEnd;
 
-                if (subStart < subEnd)
+                if (subStart <= subEnd)
                 {
-                    var days = subEnd.DayNumber - subStart.DayNumber;
-
-                    // Επιλογή διαιρέτη βάσει μεθόδου
+                    var days = subEnd.DayNumber - subStart.DayNumber + 1;
                     var divisor = command.CalculationMethod == CalculationMethod.CalendarYear
                         ? DateTime.IsLeapYear(currentYear) ? 366m : 365m
                         : 360m;
 
-                    // Υπολογισμός τόκων
                     var contractualAmount = command.Amount * (rate.ContractualRate / 100m) * (days / divisor);
                     var defaultAmount = command.Amount * (rate.DefaultRate / 100m) * (days / divisor);
 
-                    var period = new InterestPeriodDto(
+                    tempPeriods.Add(new InterestPeriodDto(
                         From: subStart,
                         To: subEnd,
                         NumOfDays: days,
-                        ContractualRate: new RateDto(rate.ContractualRate, Math.Round(contractualAmount, 2)),
-                        DefaultRate: new RateDto(rate.DefaultRate, Math.Round(defaultAmount, 2)));
-
-                    periods.Add(period);
+                        ContractualRate: new RateDto(rate.ContractualRate, contractualAmount),
+                        DefaultRate: new RateDto(rate.DefaultRate, defaultAmount)));
                 }
 
                 currentYear++;
             }
         }
 
+        // --- ΣΥΓΧΩΝΕΥΣΗ ΚΑΙ ΣΤΡΟΓΓΥΛΟΠΟΙΗΣΗ (SUMMARY LOGIC) ---
+        var mergedPeriods = new List<InterestPeriodDto>();
+        if (tempPeriods.Any())
+        {
+            // Ξεκινάμε με την πρώτη περίοδο
+            var current = tempPeriods[0];
+
+            for (int i = 1; i < tempPeriods.Count; i++)
+            {
+                var next = tempPeriods[i];
+
+                // Αν το επιτόκιο είναι το ίδιο, συγχωνεύουμε
+                if (current.ContractualRate.Percentage == next.ContractualRate.Percentage &&
+                    current.DefaultRate.Percentage == next.DefaultRate.Percentage)
+                {
+                    current = current with
+                    {
+                        To = next.To,
+                        NumOfDays = current.NumOfDays + next.NumOfDays,
+                        // Προσθέτουμε τα "άγρια" δεκαδικά ποσά
+                        ContractualRate = current.ContractualRate with
+                        {
+                            Amount = current.ContractualRate.Amount + next.ContractualRate.Amount
+                        },
+                        DefaultRate = current.DefaultRate with
+                        {
+                            Amount = current.DefaultRate.Amount + next.DefaultRate.Amount
+                        }
+                    };
+                }
+                else
+                {
+                    // Πριν κλείσουμε την περίοδο, κάνουμε το Round
+                    mergedPeriods.Add(FinalizeRounding(current));
+                    current = next;
+                }
+            }
+
+            // Στρογγυλοποίηση και για την τελευταία εγγραφή
+            mergedPeriods.Add(FinalizeRounding(current));
+        }
+
         return new InterestCalculationResult
         {
-            Periods = periods,
+            Periods = mergedPeriods,
             Amount = command.Amount,
-            ContractualRateAmount = periods.Sum(p => p.ContractualRate.Amount),
-            DefaultRateAmount = periods.Sum(p => p.DefaultRate.Amount)
+            // Τα τελικά σύνολα προκύπτουν από το άθροισμα των ήδη στρογγυλοποιημένων περιόδων
+            ContractualRateAmount = mergedPeriods.Sum(p => p.ContractualRate.Amount),
+            DefaultRateAmount = mergedPeriods.Sum(p => p.DefaultRate.Amount)
+        };
+    }
+
+    // Helper μέθοδος για στρογγυλοποίηση στο τέλος της συγχώνευσης
+    private InterestPeriodDto FinalizeRounding(InterestPeriodDto period)
+    {
+        return period with
+        {
+            ContractualRate = period.ContractualRate with
+            {
+                Amount = Math.Round(period.ContractualRate.Amount, 2, MidpointRounding.AwayFromZero)
+            },
+            DefaultRate = period.DefaultRate with
+            {
+                Amount = Math.Round(period.DefaultRate.Amount, 2, MidpointRounding.AwayFromZero)
+            }
         };
     }
 }
