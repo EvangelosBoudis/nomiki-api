@@ -1,6 +1,7 @@
 using Nomiki.Api.Core;
 using Nomiki.Api.InterestRate.Commands;
 using Nomiki.Api.InterestRate.Dto;
+using Nomiki.Api.InterestRate.Extensions;
 
 namespace Nomiki.Api.InterestRate.Services;
 
@@ -8,64 +9,51 @@ public class InterestRateManager(IInterestRateDataSourceClient dataSourceClient)
 {
     public async Task<InterestCalculationResult> CalculateInterestAsync(InterestCalculationCommand command)
     {
-        var rates =
-            (await dataSourceClient.GetInterestRatesAsync())
+        var rates = (await dataSourceClient.GetInterestRatesAsync())
             .Where(r => r.From < command.To && (r.To == null || r.To >= command.From))
             .OrderBy(r => r.From);
 
-        var periods = new List<InterestPeriodDto>();
+        return new InterestCalculationResult(
+            amount: command.Amount,
+            periods: rates
+                .SelectMany(r =>
+                {
+                    var start = command.From > r.From ? command.From : r.From;
+                    var end = r.To == null || command.To < r.To ? command.To : r.To.Value;
+                    return start < end
+                        ? SplitIntoYearlyPeriods(command.Amount, command.CalculationMethod, r, start, end)
+                        : [];
+                }).Consolidate());
+    }
 
-        foreach (var rate in rates)
+    private static IEnumerable<InterestPeriodDto> SplitIntoYearlyPeriods(
+        decimal amount, CalculationMethod method, InterestRateDto rate, DateOnly start, DateOnly end)
+    {
+        for (var i = start.Year; i <= end.Year; i++)
         {
-            var start = command.From > rate.From ? command.From : rate.From;
-            var end = rate.To == null || command.To < rate.To ? command.To : rate.To.Value;
-            if (start >= end) continue;
+            var startPeriod = start > DateOnlyExtensions.FirstDay(year: i)
+                ? start
+                : DateOnlyExtensions.FirstDay(year: i);
 
-            for (var i = start.Year; i <= end.Year; i++)
+            var endPeriod = end < DateOnlyExtensions.LastDay(year: i) ? end : DateOnlyExtensions.LastDay(year: i);
+
+            if (startPeriod > endPeriod) continue;
+
+            var days = endPeriod.DayNumber - startPeriod.DayNumber + 1;
+
+            var divisor = method == CalculationMethod.CalendarYear
+                ? DateTime.IsLeapYear(i) ? 366m : 365m
+                : 360m;
+
+            yield return new InterestPeriodDto
             {
-                var startYear = DateOnlyExtensions.FirstDayOfYear(i);
-                var endYear = DateOnlyExtensions.LastDayOfYear(i);
-
-                var startPeriod = start > startYear ? start : startYear;
-                var endPeriod = end < endYear ? end : endYear;
-                if (startPeriod > endPeriod) continue;
-
-                var days = endPeriod.DayNumber - startPeriod.DayNumber + 1;
-                var divisor = command.CalculationMethod == CalculationMethod.CalendarYear
-                    ? DateTime.IsLeapYear(i) ? 366m : 365m
-                    : 360m;
-
-                periods.Add(new InterestPeriodDto
-                {
-                    From = startPeriod,
-                    To = endPeriod,
-                    NumOfDays = days,
-                    ContractualRate = new RateDto(
-                        Percentage: rate.ContractualRate,
-                        Amount: command.Amount * (rate.ContractualRate / 100m) * (days / divisor)),
-                    DefaultRate = new RateDto(
-                        Percentage: rate.DefaultRate,
-                        Amount: command.Amount * (rate.DefaultRate / 100m) * (days / divisor))
-                });
-            }
+                From = startPeriod,
+                To = endPeriod,
+                NumOfDays = days,
+                ContractualRate = new RateDto(rate.ContractualRate,
+                    amount * (rate.ContractualRate / 100m) * (days / divisor)),
+                DefaultRate = new RateDto(rate.DefaultRate, amount * (rate.DefaultRate / 100m) * (days / divisor))
+            };
         }
-
-        var merged = periods
-            .Aggregate(new List<InterestPeriodDto>(), (l, n) =>
-            {
-                var last = l.LastOrDefault();
-                if (last?.HasSameRatesWith(n) == true) last.MergeWith(n);
-                else
-                {
-                    last?.RoundRateAmounts();
-                    l.Add(n);
-                }
-
-                return l;
-            });
-
-        merged.LastOrDefault()?.RoundRateAmounts();
-
-        return new InterestCalculationResult(command.Amount, merged);
     }
 }
