@@ -3,9 +3,7 @@ using Nomiki.Api.InterestRate.Dto;
 
 namespace Nomiki.Api.InterestRate.Services;
 
-public interface IInterestRateService
+public interface IInterestRateManager
 {
-    Task<IEnumerable<InterestRateDto>> GetInterestRatesAsync();
-
     Task<InterestCalculationResult> CalculateInterestAsync(InterestCalculationCommand command);
 }

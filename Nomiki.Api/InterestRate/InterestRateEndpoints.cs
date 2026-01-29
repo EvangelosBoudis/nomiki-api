@@ -8,14 +8,14 @@ namespace Nomiki.Api.InterestRate;
 internal class InterestRateEndpoints
 {
     internal static async Task<Ok<InterestCalculationResult>> GetInterestRates(
-        IInterestRateService service,
+        IInterestRateManager manager,
         decimal amount,
         DateOnly from,
         DateOnly to,
         CalculationMethod method)
     {
         var command = new InterestCalculationCommand(amount, from, to, method);
-        var result = await service.CalculateInterestAsync(command);
+        var result = await manager.CalculateInterestAsync(command);
         return TypedResults.Ok(result);
     }
 }

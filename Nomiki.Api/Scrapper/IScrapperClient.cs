@@ -3,7 +3,7 @@ namespace Nomiki.Api.Scrapper;
 /// <summary>
 /// Service responsible for fetching and parsing web data into strongly typed objects.
 /// </summary>
-public interface IScrapper
+public interface IScrapperClient
 {
     /// <summary>
     /// Scrapes a list of items from a given URL.

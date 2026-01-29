@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Nomiki.Api.InterestRate.Services;
 using Nomiki.Api.Scrapper;
 using Nomiki.Api.Scrapper.HtmlAgility;
@@ -14,8 +15,10 @@ public static class InterestRateConfigurationExtensions
 
         services.Configure<InterestRateOptions>(configuration.GetSection(InterestRateOptions.Name));
 
-        services.AddTransient<IScrapper, ScrapperAgility>();
-        services.AddTransient<IInterestRateService, InterestRateService>();
+        services.TryAddTransient<IScrapperClient, ScrapperClientAgility>();
+
+        services.TryAddTransient<IInterestRateDataSourceClient, InterestRateDataSourceScrapeClient>();
+        services.AddTransient<IInterestRateManager, InterestRateManager>();
 
         return services;
     }

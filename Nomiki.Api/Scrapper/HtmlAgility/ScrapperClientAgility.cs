@@ -2,7 +2,7 @@ using HtmlAgilityPack;
 
 namespace Nomiki.Api.Scrapper.HtmlAgility;
 
-public class ScrapperAgility(ILogger<ScrapperAgility> logger) : IScrapper
+public class ScrapperClientAgility(ILogger<ScrapperClientAgility> logger) : IScrapperClient
 {
     public async Task<IEnumerable<T>> ScrapeAsync<T>(string url, string xpath, Func<IHtmlElement, T> mapper)
     {
