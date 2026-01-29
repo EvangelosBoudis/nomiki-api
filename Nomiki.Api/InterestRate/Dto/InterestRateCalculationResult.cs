@@ -1,8 +1,8 @@
 namespace Nomiki.Api.InterestRate.Dto;
 
-public record InterestCalculationResult()
+public record InterestRateCalculationResult()
 {
-    public InterestCalculationResult(decimal amount, List<InterestPeriodDto> periods) : this()
+    public InterestRateCalculationResult(decimal amount, List<InterestPeriodDto> periods) : this()
     {
         Amount = amount;
         Periods = periods;

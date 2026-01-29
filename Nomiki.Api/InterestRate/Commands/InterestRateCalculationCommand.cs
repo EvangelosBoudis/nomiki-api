@@ -7,7 +7,7 @@ namespace Nomiki.Api.InterestRate.Commands;
 /// <param name="From">Ημ/νία (από).</param>
 /// <param name="To">Ημ/νία (έως).</param>
 /// <param name="CalculationMethod">Μέθοδος υπολογισμού.</param>
-public record InterestCalculationCommand(
+public record InterestRateCalculationCommand(
     decimal Amount,
     DateOnly From,
     DateOnly To,

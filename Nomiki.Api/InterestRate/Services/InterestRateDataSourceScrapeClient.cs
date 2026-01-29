@@ -1,6 +1,6 @@
 using System.Globalization;
 using Microsoft.Extensions.Options;
-using Nomiki.Api.InterestRate.Dto;
+using Nomiki.Api.InterestRate.Domain;
 using Nomiki.Api.Scrapper;
 
 namespace Nomiki.Api.InterestRate.Services;
@@ -21,9 +21,9 @@ public class InterestRateDataSourceScrapeClient : IInterestRateDataSourceClient
         _scrapperClient = scrapperClient;
     }
 
-    public async Task<IEnumerable<InterestRateDto>> GetInterestRatesAsync()
+    public async Task<IEnumerable<InterestRateDefinition>> GetInterestRateDefinitionsAsync()
     {
-        return await _scrapperClient.ScrapeAsync<InterestRateDto>(
+        return await _scrapperClient.ScrapeAsync<InterestRateDefinition>(
             url: _scrapeUrl,
             xpath: "//table//tr[td]",
             mapper: htmlElement =>
@@ -32,7 +32,7 @@ public class InterestRateDataSourceScrapeClient : IInterestRateDataSourceClient
 
                 ArgumentOutOfRangeException.ThrowIfLessThan(cells.Count, 6);
 
-                var interestRate = new InterestRateDto
+                var definition = new InterestRateDefinition
                 {
                     From = DateOnly.ParseExact(cells[0].GetText(), "d/M/yyyy", _culture),
                     AdministrativeAct = cells[2].GetText(),
@@ -41,13 +41,23 @@ public class InterestRateDataSourceScrapeClient : IInterestRateDataSourceClient
                     DefaultRate = decimal.Parse(cells[5].GetText().Replace("%", ""), _culture)
                 };
 
+                var payload =
+                    $"{definition.From:yyyy-MM-dd}|{definition.To:yyyy-MM-dd}|" +
+                    $"{definition.AdministrativeAct}|{definition.Fek}" +
+                    $"{definition.ContractualRate.ToString(CultureInfo.InvariantCulture)}|" +
+                    $"{definition.DefaultRate.ToString(CultureInfo.InvariantCulture)}";
+
+                var bytes = System.Text.Encoding.UTF8.GetBytes(payload);
+                definition.DeterministicHash =
+                    Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes));
+
                 var endDateText = cells[1].GetText();
 
                 var parsed = DateOnly.TryParseExact(
                     endDateText, "d/M/yyyy", _culture, DateTimeStyles.None, out var result);
-                if (parsed) interestRate.To = result;
+                if (parsed) definition.To = result;
 
-                return interestRate;
+                return definition;
             });
     }
 }

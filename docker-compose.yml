@@ -1,6 +1,25 @@
-﻿services:
-  nomiki.api:
-    image: nomiki.api
-    build:
-      context: .
-      dockerfile: Nomiki.Api/Dockerfile
+﻿version: '3.9'
+
+networks:
+  dev:
+    driver: bridge
+
+services:
+
+  db:
+    container_name: postgres_db
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: nomiki_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - db_data:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+    restart: always
+    networks:
+      - dev
+
+volumes:
+  db_data: 

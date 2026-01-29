@@ -1,8 +1,8 @@
-using Nomiki.Api.InterestRate.Dto;
+using Nomiki.Api.InterestRate.Domain;
 
 namespace Nomiki.Api.InterestRate.Services;
 
 public interface IInterestRateDataSourceClient
 {
-    Task<IEnumerable<InterestRateDto>> GetInterestRatesAsync();
+    Task<IEnumerable<InterestRateDefinition>> GetInterestRateDefinitionsAsync();
 }

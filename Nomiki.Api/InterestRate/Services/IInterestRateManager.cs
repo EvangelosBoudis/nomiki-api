@@ -5,5 +5,7 @@ namespace Nomiki.Api.InterestRate.Services;
 
 public interface IInterestRateManager
 {
-    Task<InterestCalculationResult> CalculateInterestAsync(InterestCalculationCommand command);
+    Task ReplicateInterestRateDefinitionsAsync();
+
+    Task<InterestRateCalculationResult> CalculateInterestRateAsync(InterestRateCalculationCommand command);
 }

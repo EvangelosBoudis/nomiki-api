@@ -1,19 +1,55 @@
+using Microsoft.EntityFrameworkCore;
 using Nomiki.Api.Core;
 using Nomiki.Api.InterestRate.Commands;
+using Nomiki.Api.InterestRate.Database;
+using Nomiki.Api.InterestRate.Domain;
 using Nomiki.Api.InterestRate.Dto;
 using Nomiki.Api.InterestRate.Extensions;
 
 namespace Nomiki.Api.InterestRate.Services;
 
-public class InterestRateManager(IInterestRateDataSourceClient dataSourceClient) : IInterestRateManager
+public class InterestRateManager(
+    DataContext db,
+    IInterestRateDataSourceClient dataSourceClient
+) : IInterestRateManager
 {
-    public async Task<InterestCalculationResult> CalculateInterestAsync(InterestCalculationCommand command)
+    public async Task ReplicateInterestRateDefinitionsAsync()
     {
-        var rates = (await dataSourceClient.GetInterestRatesAsync())
-            .Where(r => r.From < command.To && (r.To == null || r.To >= command.From))
-            .OrderBy(r => r.From);
+        var definitions = (await dataSourceClient.GetInterestRateDefinitionsAsync()).ToList();
 
-        return new InterestCalculationResult(
+        var storedHashes = await db
+            .Set<InterestRateDefinition>()
+            .Select(i => i.DeterministicHash)
+            .ToListAsync();
+
+        var recordsForInsert = definitions
+            .Where(i => !storedHashes.Contains(i.DeterministicHash))
+            .ToList();
+
+        // save new interest rate definitions
+        await db.AddRangeAsync(recordsForInsert);
+        await db.SaveChangesAsync();
+
+        // delete updated or delete stored definitions
+        var hashesForDelete = storedHashes
+            .Where(x => definitions.All(i => i.DeterministicHash != x))
+            .ToList();
+
+        await db
+            .Set<InterestRateDefinition>()
+            .Where(i => hashesForDelete.Contains(i.DeterministicHash))
+            .ExecuteDeleteAsync();
+    }
+
+    public async Task<InterestRateCalculationResult> CalculateInterestRateAsync(InterestRateCalculationCommand command)
+    {
+        var rates = await db
+            .Set<InterestRateDefinition>()
+            .Where(r => r.From < command.To && (r.To == null || r.To >= command.From))
+            .OrderBy(r => r.From)
+            .ToListAsync();
+
+        return new InterestRateCalculationResult(
             amount: command.Amount,
             periods: rates
                 .SelectMany(r =>
@@ -27,7 +63,7 @@ public class InterestRateManager(IInterestRateDataSourceClient dataSourceClient)
     }
 
     private static IEnumerable<InterestPeriodDto> SplitIntoYearlyPeriods(
-        decimal amount, CalculationMethod method, InterestRateDto rate, DateOnly start, DateOnly end)
+        decimal amount, CalculationMethod method, InterestRateDefinition rate, DateOnly start, DateOnly end)
     {
         for (var i = start.Year; i <= end.Year; i++)
         {

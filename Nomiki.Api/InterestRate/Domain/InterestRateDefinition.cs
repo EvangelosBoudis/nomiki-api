@@ -1,7 +1,9 @@
-namespace Nomiki.Api.InterestRate.Dto;
+namespace Nomiki.Api.InterestRate.Domain;
 
-public class InterestRateDto
+public class InterestRateDefinition
 {
+    public Guid Id { get; set; } = Guid.NewGuid();
+
     /// <summary>
     /// Αρχική Ημερομηνία
     /// </summary>
@@ -31,4 +33,9 @@ public class InterestRateDto
     /// Υπερημερίας
     /// </summary>
     public decimal DefaultRate { get; set; }
+
+    /// <summary>
+    /// Natural Identity Hash
+    /// </summary>
+    public string DeterministicHash { get; set; } = string.Empty;
 }
