@@ -7,9 +7,9 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Nomiki.Api/Nomiki.Api.csproj", "Nomiki.Api/"]
+COPY ["src/Nomiki.Api/Nomiki.Api.csproj", "Nomiki.Api/"]
 RUN dotnet restore "Nomiki.Api/Nomiki.Api.csproj"
-COPY . .
+COPY . ../
 WORKDIR "/src/Nomiki.Api"
 RUN dotnet build "Nomiki.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
