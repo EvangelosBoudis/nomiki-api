@@ -8,7 +8,8 @@ public class InterestRateManager(IInterestRateDataSourceClient dataSourceClient)
 {
     public async Task<InterestCalculationResult> CalculateInterestAsync(InterestCalculationCommand command)
     {
-        var rates = (await dataSourceClient.GetInterestRatesAsync())
+        var rates =
+            (await dataSourceClient.GetInterestRatesAsync())
             .Where(r => r.From < command.To && (r.To == null || r.To >= command.From))
             .OrderBy(r => r.From);
 
@@ -18,7 +19,6 @@ public class InterestRateManager(IInterestRateDataSourceClient dataSourceClient)
         {
             var start = command.From > rate.From ? command.From : rate.From;
             var end = rate.To == null || command.To < rate.To ? command.To : rate.To.Value;
-
             if (start >= end) continue;
 
             for (var i = start.Year; i <= end.Year; i++)
@@ -26,20 +26,19 @@ public class InterestRateManager(IInterestRateDataSourceClient dataSourceClient)
                 var startYear = DateOnlyExtensions.FirstDayOfYear(i);
                 var endYear = DateOnlyExtensions.LastDayOfYear(i);
 
-                var startSub = start > startYear ? start : startYear;
-                var endSub = end < endYear ? end : endYear;
+                var startPeriod = start > startYear ? start : startYear;
+                var endPeriod = end < endYear ? end : endYear;
+                if (startPeriod > endPeriod) continue;
 
-                if (startSub > endSub) continue;
-
-                var days = endSub.DayNumber - startSub.DayNumber + 1;
+                var days = endPeriod.DayNumber - startPeriod.DayNumber + 1;
                 var divisor = command.CalculationMethod == CalculationMethod.CalendarYear
                     ? DateTime.IsLeapYear(i) ? 366m : 365m
                     : 360m;
 
-                var period = new InterestPeriodDto
+                periods.Add(new InterestPeriodDto
                 {
-                    From = startSub,
-                    To = endSub,
+                    From = startPeriod,
+                    To = endPeriod,
                     NumOfDays = days,
                     ContractualRate = new RateDto(
                         Percentage: rate.ContractualRate,
@@ -47,9 +46,7 @@ public class InterestRateManager(IInterestRateDataSourceClient dataSourceClient)
                     DefaultRate = new RateDto(
                         Percentage: rate.DefaultRate,
                         Amount: command.Amount * (rate.DefaultRate / 100m) * (days / divisor))
-                };
-
-                periods.Add(period);
+                });
             }
         }
 

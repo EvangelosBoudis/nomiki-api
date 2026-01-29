@@ -43,9 +43,9 @@ public class InterestRateDataSourceScrapeClient : IInterestRateDataSourceClient
 
                 var endDateText = cells[1].GetText();
 
-                if (!endDateText.Contains('-') &&
-                    DateOnly.TryParseExact(endDateText, "d/M/yyyy", _culture, DateTimeStyles.None, out var result))
-                    interestRate.To = result;
+                var parsed = DateOnly.TryParseExact(
+                    endDateText, "d/M/yyyy", _culture, DateTimeStyles.None, out var result);
+                if (parsed) interestRate.To = result;
 
                 return interestRate;
             });
