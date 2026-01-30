@@ -2,8 +2,16 @@ using System.Runtime.CompilerServices;
 
 namespace Nomiki.Api.InterestRate;
 
+/// <summary>
+/// Provides extension methods for mapping Interest Rate related API endpoints.
+/// </summary>
 public static class InterestRateApiEndpointRouteBuilderExtensions
 {
+    /// <summary>
+    /// Maps the interest rate API group and defines its endpoints, OpenAPI metadata, and documentation.
+    /// </summary>
+    /// <param name="routes">The endpoint route builder to add the routes to.</param>
+    /// <returns>A <see cref="RouteGroupBuilder"/> for further endpoint configuration.</returns>
     public static RouteGroupBuilder MapInterestRateApi(this IEndpointRouteBuilder routes)
     {
         var baseUrl = new DefaultInterpolatedStringHandler(1, 1);
@@ -18,9 +26,10 @@ public static class InterestRateApiEndpointRouteBuilderExtensions
         builder
             .MapGet(string.Empty, InterestRateEndpoints.GetInterestRates)
             .WithName("GetInterestRates")
-            .WithSummary("Αυτόματος υπολογισμός δικαιοπρακτικών τόκων και τόκων υπερημερίας")
+            .WithSummary("Automatic calculation of contractual and default interest rates.")
             .WithDescription(
-                "Μπορείτε να υπολογίσετε τους τόκους επιλέγοντας ημερολογιακό έτος (=365 ημέρες και =366 ημέρες τα δίσεκτα έτη) ή επιλέγοντας λογιστικό έτος (=360 ημέρες για όλα τα έτη υπολογισμού).");
+                "Calculate interest by selecting either the Calendar Year method (Actual/Actual - 365 days or 366 for leap years) " +
+                "or the Standard 360 method (360 days for all calculation years).");
 
         return builder;
     }

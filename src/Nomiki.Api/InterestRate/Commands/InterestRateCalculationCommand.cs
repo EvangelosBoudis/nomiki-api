@@ -1,27 +1,32 @@
 namespace Nomiki.Api.InterestRate.Commands;
 
 /// <summary>
-/// Υπολογισμός δικαιοπρακτικών τόκων και τόκων υπερημερίας.
+/// Command object containing the parameters required to calculate contractual and default interest.
 /// </summary>
-/// <param name="Amount">Ποσό.</param>
-/// <param name="From">Ημ/νία (από).</param>
-/// <param name="To">Ημ/νία (έως).</param>
-/// <param name="CalculationMethod">Μέθοδος υπολογισμού.</param>
+/// <param name="Amount">The principal amount on which interest is calculated.</param>
+/// <param name="From">The inclusive start date of the interest period.</param>
+/// <param name="To">The inclusive end date of the interest period.</param>
+/// <param name="CalculationMethod">The day-count convention to be applied.</param>
 public record InterestRateCalculationCommand(
     decimal Amount,
     DateOnly From,
     DateOnly To,
     CalculationMethod CalculationMethod);
 
+/// <summary>
+/// Defines the mathematical convention used for day counting in interest calculations.
+/// </summary>
 public enum CalculationMethod
 {
     /// <summary>
-    /// 365 ή 366 μέρες (Actual/Actual)
+    /// Uses the actual number of days in the year (365 or 366 for leap years). 
+    /// Commonly known as Actual/Actual.
     /// </summary>
     CalendarYear,
 
     /// <summary>
-    /// Σταθερό έτος 360 ημερών (συνηθισμένο σε εμπορικές συναλλαγές)
+    /// Assumes a fixed year of 360 days (often used in commercial and banking transactions). 
+    /// Commonly known as 30/360 or Eurobond basis.
     /// </summary>
     Standard360
 }

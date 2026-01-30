@@ -7,8 +7,16 @@ using Nomiki.Api.Scrapper.HtmlAgility;
 
 namespace Nomiki.Api.InterestRate;
 
+/// <summary>
+/// Extension methods for registering interest rate services into the dependency injection container.
+/// </summary>
 public static class InterestRateConfigurationExtensions
 {
+    /// <summary>
+    /// Registers all necessary services for interest rate scraping, persistence, and calculation.
+    /// </summary>
+    /// <param name="services">The service collection to add the services to.</param>
+    /// <returns>The updated service collection.</returns>
     public static IServiceCollection AddInterestRate(this IServiceCollection services)
     {
         var configuration = services

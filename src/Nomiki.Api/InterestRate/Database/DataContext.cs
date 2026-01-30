@@ -3,6 +3,11 @@ using Nomiki.Api.InterestRate.Domain;
 
 namespace Nomiki.Api.InterestRate.Database;
 
+/// <summary>
+/// The primary database context for the application, responsible for managing 
+/// <see cref="InterestRateDefinition"/> entities and PostgreSQL connectivity.
+/// </summary>
+/// <param name="options">The options to be used by this <see cref="DbContext"/>.</param>
 public class DataContext(DbContextOptions options) : DbContext(options)
 {
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

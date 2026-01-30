@@ -6,12 +6,14 @@ namespace Nomiki.Api.Scrapper;
 public interface IScrapperClient
 {
     /// <summary>
-    /// Scrapes a list of items from a given URL.
+    /// Scrapes a collection of items from a specified URL and maps them to a specific type.
     /// </summary>
-    /// <typeparam name="T">The type of object to return.</typeparam>
-    /// <param name="url">The target website URL.</param>
-    /// <param name="xpath">The XPath/Selector to find the collection of items (e.g., rows).</param>
-    /// <param name="mapper">A delegate defining how to map an IHtmlElement to type T.</param>
+    /// <typeparam name="T">The destination type for the scraped data.</typeparam>
+    /// <param name="url">The target website URL to fetch.</param>
+    /// <param name="xpath">The XPath expression used to locate the collection of elements (e.g., table rows).</param>
+    /// <param name="mapper">A function delegate that defines how to transform an <see cref="IHtmlElement"/> into an instance of <typeparamref name="T"/>.</param>
+    /// <returns>A task representing the asynchronous operation, containing an enumerable of mapped objects.</returns>
+    /// <exception cref="HttpRequestException">Thrown when the URL cannot be reached.</exception>
     Task<IEnumerable<T>> ScrapeAsync<T>(string url,
         string xpath,
         Func<IHtmlElement, T> mapper);

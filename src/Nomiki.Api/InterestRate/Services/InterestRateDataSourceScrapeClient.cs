@@ -5,13 +5,20 @@ using Nomiki.Api.Scrapper;
 
 namespace Nomiki.Api.InterestRate.Services;
 
+/// <summary>
+/// Scrapes interest rate data from a specific website and maps it to domain entities.
+/// </summary>
 public class InterestRateDataSourceScrapeClient : IInterestRateDataSourceClient
 {
     private readonly string _scrapeUrl;
-
     private readonly IScrapperClient _scrapperClient;
     private readonly CultureInfo _culture = new("el-GR");
 
+    /// <summary>
+    /// Initializes a new instance of the scrape client.
+    /// </summary>
+    /// <param name="options">Configuration options containing the source URL.</param>
+    /// <param name="scrapperClient">The generic scraper service.</param>
     public InterestRateDataSourceScrapeClient(IOptions<InterestRateOptions> options, IScrapperClient scrapperClient)
     {
         var scrapeUlr = options.Value.ScrapeUlr;
@@ -21,6 +28,7 @@ public class InterestRateDataSourceScrapeClient : IInterestRateDataSourceClient
         _scrapperClient = scrapperClient;
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<InterestRateDefinition>> GetInterestRateDefinitionsAsync()
     {
         return await _scrapperClient.ScrapeAsync<InterestRateDefinition>(

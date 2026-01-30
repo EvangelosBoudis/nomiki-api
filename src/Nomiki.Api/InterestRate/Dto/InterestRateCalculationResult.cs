@@ -1,7 +1,15 @@
 namespace Nomiki.Api.InterestRate.Dto;
 
+/// <summary>
+/// Represents the final result of an interest calculation, including aggregations and period breakdowns.
+/// </summary>
 public record InterestRateCalculationResult()
 {
+    /// <summary>
+    /// Initializes a new instance of the result with calculated totals based on the provided periods.
+    /// </summary>
+    /// <param name="amount">The initial principal amount.</param>
+    /// <param name="periods">The list of broken-down interest periods.</param>
     public InterestRateCalculationResult(decimal amount, List<InterestPeriodDto> periods) : this()
     {
         Amount = amount;
@@ -13,105 +21,32 @@ public record InterestRateCalculationResult()
     }
 
     /// <summary>
-    /// Λεπτομέριες ανά διάστημα
+    /// Gets the detailed breakdown of interest for each chronological sub-period.
     /// </summary>
     public List<InterestPeriodDto> Periods { get; } = [];
 
     /// <summary>
-    /// Αρχικό Κεφάλαιο
+    /// Gets the initial principal capital amount.
     /// </summary>
     public decimal Amount { get; }
 
     /// <summary>
-    /// Δικαιοπρακτικός τόκος
+    /// Gets the total accumulated contractual interest (Δικαιοπρακτικός) across all periods.
     /// </summary>
     public decimal ContractualRateAmount { get; }
 
     /// <summary>
-    /// Τόκος υπερημερίας
+    /// Gets the total accumulated default interest (Υπερημερίας) across all periods.
     /// </summary>
     public decimal DefaultRateAmount { get; }
 
     /// <summary>
-    /// Σύνολο (Δικαιοπρακτικός τόκος) 
+    /// Gets the grand total (Principal + Total Contractual Interest).
     /// </summary>
     public decimal TotalContractualAmount { get; init; }
 
     /// <summary>
-    /// Σύνολο (Τόκος υπερημερίας) 
+    /// Gets the grand total (Principal + Total Default Interest).
     /// </summary>
     public decimal TotalDefaultAmount { get; init; }
-}
-
-/// <summary>
-/// Represents the interest period.
-/// </summary>
-public record InterestPeriodDto
-{
-    /// <summary>
-    /// Ημ/νία (από).
-    /// </summary>
-    public DateOnly From { get; set; }
-
-    /// <summary>
-    /// Ημ/νία (έως).
-    /// </summary>
-    public DateOnly To { get; set; }
-
-    /// <summary>
-    /// Ημέρες.
-    /// </summary>
-    public int NumOfDays { get; set; }
-
-    /// <summary>
-    /// Δικαιοπρακτικός τόκος.
-    /// </summary>
-    public required RateDto ContractualRate { get; set; }
-
-    /// <summary>
-    /// Τόκος υπερημερίας.
-    /// </summary>
-    public required RateDto DefaultRate { get; set; }
-
-    private void AddNumOfDays(int days) => NumOfDays += days;
-
-    public bool HasSameRatesWith(InterestPeriodDto other) =>
-        ContractualRate.Percentage == other.ContractualRate.Percentage &&
-        DefaultRate.Percentage == other.DefaultRate.Percentage;
-
-    public void MergeWith(InterestPeriodDto other)
-    {
-        To = other.To;
-        AddNumOfDays(other.NumOfDays);
-        ContractualRate.AddAmount(other.ContractualRate.Amount);
-        DefaultRate.AddAmount(other.DefaultRate.Amount);
-    }
-
-    public void RoundRateAmounts()
-    {
-        ContractualRate.RoundAmount();
-        DefaultRate.RoundAmount();
-    }
-}
-
-/// <summary>
-/// Represents the rate details for a interest period.
-/// </summary>
-/// <param name="Percentage">Επιτόκιο.</param>
-/// <param name="Amount">Τόκος.</param>
-public record RateDto(decimal Percentage, decimal Amount)
-{
-    /// <summary>
-    /// Επιτόκιο.
-    /// </summary>
-    public decimal Percentage { get; } = Percentage;
-
-    /// <summary>
-    /// Τόκος.
-    /// </summary>
-    public decimal Amount { get; set; } = Amount;
-
-    public void AddAmount(decimal amount) => Amount += amount;
-
-    public void RoundAmount() => Amount = Math.Round(Amount, 2, MidpointRounding.AwayFromZero);
 }

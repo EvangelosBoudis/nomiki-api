@@ -2,17 +2,18 @@ using HtmlAgilityPack;
 
 namespace Nomiki.Api.Scrapper.HtmlAgility;
 
+/// <summary>
+/// An implementation of <see cref="IScrapperClient"/> using HtmlAgilityPack.
+/// </summary>
+/// <param name="logger">The logger used for tracking scraping errors.</param>
 public class ScrapperClientAgility(ILogger<ScrapperClientAgility> logger) : IScrapperClient
 {
+    /// <inheritdoc />
     public async Task<IEnumerable<T>> ScrapeAsync<T>(string url, string xpath, Func<IHtmlElement, T> mapper)
     {
-        // Initialize the web loader
         var web = new HtmlWeb();
-        // Load the document from the internet
         var doc = await web.LoadFromWebAsync(url);
-        // Select the parent nodes (e.g., table rows)
         var nodes = doc.DocumentNode.SelectNodes(xpath);
-        // Wrap each native HtmlNode into HtmlElementAgility and map it
         var result = new List<T>();
         foreach (var node in nodes)
         {

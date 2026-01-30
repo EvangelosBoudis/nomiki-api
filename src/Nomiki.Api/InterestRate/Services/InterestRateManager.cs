@@ -8,11 +8,15 @@ using Nomiki.Api.InterestRate.Extensions;
 
 namespace Nomiki.Api.InterestRate.Services;
 
+/// <summary>
+/// Implementation of <see cref="IInterestRateManager"/> handling data persistence and financial math.
+/// </summary>
 public class InterestRateManager(
     DataContext db,
     IInterestRateDataSourceClient dataSourceClient
 ) : IInterestRateManager
 {
+    /// <inheritdoc />
     public async Task ReplicateInterestRateDefinitionsAsync()
     {
         var definitions = (await dataSourceClient.GetInterestRateDefinitionsAsync()).ToList();
@@ -41,6 +45,7 @@ public class InterestRateManager(
             .ExecuteDeleteAsync();
     }
 
+    /// <inheritdoc />
     public async Task<InterestRateCalculationResult> CalculateInterestRateAsync(InterestRateCalculationCommand command)
     {
         var rates = await db
@@ -62,6 +67,10 @@ public class InterestRateManager(
                 }).Consolidate());
     }
 
+    /// <summary>
+    /// Splits a single interest rate period into sub-periods based on calendar years.
+    /// This is necessary because leap years change the daily interest divisor in the CalendarYear method.
+    /// </summary>
     private static IEnumerable<InterestPeriodDto> SplitIntoYearlyPeriods(
         decimal amount, CalculationMethod method, InterestRateDefinition rate, DateOnly start, DateOnly end)
     {
