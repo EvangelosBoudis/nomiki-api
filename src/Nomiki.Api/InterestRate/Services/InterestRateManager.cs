@@ -48,6 +48,9 @@ public class InterestRateManager(
     /// <inheritdoc />
     public async Task<InterestRateCalculationResult> CalculateInterestRateAsync(InterestRateCalculationCommand command)
     {
+        var readyToProceed = await db.Set<InterestRateDefinition>().AnyAsync();
+        if (!readyToProceed) await ReplicateInterestRateDefinitionsAsync();
+
         var rates = await db
             .Set<InterestRateDefinition>()
             .Where(r => r.From < command.To && (r.To == null || r.To >= command.From))
