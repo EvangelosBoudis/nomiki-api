@@ -6,3 +6,6 @@ run-app:
 
 add-init-migrations:
 	dotnet ef migrations add Init --project src/Nomiki.Api -o InterestRate/Database/Migrations -v
+
+add-interest-rate-definition-unique-from-to-migrations:
+	dotnet ef migrations add InterestRateDefinitionUniqueFromTo --project src/Nomiki.Api -o InterestRate/Database/Migrations -v
