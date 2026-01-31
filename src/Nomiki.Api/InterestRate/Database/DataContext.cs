@@ -28,7 +28,7 @@ public class DataContext(DbContextOptions options) : DbContext(options)
             entity.Property(i => i.DefaultRate).HasPrecision(18, 2).IsRequired();
             entity.Property(i => i.DeterministicHash).HasMaxLength(200).IsRequired();
 
-            entity.HasIndex(r => new { r.From, r.To });
+            entity.HasIndex(r => new { r.From, r.To }).IsUnique();
         });
     }
 }
