@@ -23,30 +23,30 @@ public record InterestRateCalculationResult()
     /// <summary>
     /// Gets the detailed breakdown of interest for each chronological sub-period.
     /// </summary>
-    public List<InterestPeriodDto> Periods { get; } = [];
+    public List<InterestPeriodDto> Periods { get; set; } = [];
 
     /// <summary>
     /// Gets the initial principal capital amount.
     /// </summary>
-    public decimal Amount { get; }
+    public decimal Amount { get; set; }
 
     /// <summary>
     /// Gets the total accumulated contractual interest (Δικαιοπρακτικός) across all periods.
     /// </summary>
-    public decimal ContractualRateAmount { get; }
+    public decimal ContractualRateAmount { get; set; }
 
     /// <summary>
     /// Gets the total accumulated default interest (Υπερημερίας) across all periods.
     /// </summary>
-    public decimal DefaultRateAmount { get; }
+    public decimal DefaultRateAmount { get; set; }
 
     /// <summary>
     /// Gets the grand total (Principal + Total Contractual Interest).
     /// </summary>
-    public decimal TotalContractualAmount { get; init; }
+    public decimal TotalContractualAmount { get; set; }
 
     /// <summary>
     /// Gets the grand total (Principal + Total Default Interest).
     /// </summary>
-    public decimal TotalDefaultAmount { get; init; }
+    public decimal TotalDefaultAmount { get; set; }
 }
