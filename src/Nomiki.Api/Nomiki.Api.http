@@ -1,7 +1,0 @@
-@Nomiki.Api_HostAddress = http://localhost:5268
-
-# Example: Get rates for 1000.50 Euro, from 2024-01-01 to 2024-12-31 using 'Simple' method
-GET http://localhost:5268/interest-rates?amount=1000.50&from=2024-01-01&to=2025-12-31&method=1
-Accept: application/json
-
-###
